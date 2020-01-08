@@ -62,6 +62,14 @@ spec:
             name: "{{ .Values.elasticsearch_embedded.port }}tcp"
             protocol: TCP
           {{- end }}
+          {{- if .Values.externalPorts.enabled }}
+          - containerPort: {{ .Values.externalPorts.extPort }}
+            name: "{{ .Values.externalPorts.extPortName }}"
+            protocol: TCP
+          - containerPort: {{ .Values.externalPorts.regPort }}
+            name: "{{ .Values.externalPorts.regPortName }}"
+            protocol: TCP
+          {{- end }}
         livenessProbe:
           failureThreshold: 4
           initialDelaySeconds: 30

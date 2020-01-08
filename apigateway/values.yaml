@@ -30,6 +30,15 @@ is:
 # Port of ApiGateway used in the Docker image. Default port is: 9072
 apigateway:
     port: 9072
+    
+# External Ports in case of Reverse Invoke configuration
+# This will be needed only for the deployment in DMZ
+externalPorts:
+  enabled: false
+  extPort: 
+  extPortName: ""
+  regPort:
+  regPortName: ""
 
 # Use only elasticsearch_external, elasticsearch_sidecar or elasticsearch_embedded,
 # Depending on your environment and intentions.

@@ -14,7 +14,17 @@ spec:
     - name: http2
       port: {{ .Values.apigateway.port }}
       targetPort: {{ .Values.apigateway.port }}
-      protocol: TCP 
+      protocol: TCP
+    {{- if .Values.externalPorts.enabled }}  
+    - name: {{ .Values.externalPorts.extPortName }}
+      port: {{ .Values.externalPorts.extPort }}
+      targetPort: {{ .Values.externalPorts.extPort }}
+      protocol: TCP
+    - name: {{ .Values.externalPorts.regPortName }}
+      port: {{ .Values.externalPorts.regPort }}
+      targetPort: {{ .Values.externalPorts.regPort }}
+      protocol: TCP
+    {{- end }}
     {{- if .Values.elasticsearch_sidecar }}
     - name: http3
       port: 9200
