@@ -5,6 +5,15 @@ replicaCount: 1
 image:
   repository: "<your/apigateway/image/repository>"
   tag: "<your/apigateway/image/tag>"
+  
+# External Ports in case of Reverse Invoke configuration
+# This will be needed only for the deployment in DMZ
+externalPorts:
+  enabled: false
+  extPort: 
+  extPortName: ""
+  regPort:
+  regPortName: ""
 
 # Elasticsearch Deployment:
 # that can be run in three different manners (Only one is required):
