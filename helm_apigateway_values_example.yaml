@@ -1,0 +1,59 @@
+# Number of desired replicas to run
+replicaCount: 1
+
+# API Gateway docker image configurations
+image:
+  repository: "<your/apigateway/image/repository>"
+  tag: "<your/apigateway/image/tag>"
+
+# Elasticsearch Deployment:
+# that can be run in three different manners (Only one is required):
+#   1. Pointing to an external elasticsearch cluster (recommended in a cloud deployment)
+#   2. Elasticsearch as a sidecar container
+#   3. Embedded Elasticsearch (in case of 1 API Gateway pod running)
+elasticsearch_external:
+  host: <host_of_elastic_cluster:port>
+  https: "false" 
+
+#elasticsearch_sidecar:
+#  image: <your/elasticsearch/image/repository>
+#  tag: <your/elasticsearch/image/tag>
+
+#elasticsearch_embedded:
+#  port: <your_internal_datastore_port>
+
+# Anti Affinity rules - It's allowed to choose one between the two below:
+#   1. "hard" : When the replica count is greater than 1, the pods are deployed one for each node (High Availability enforced)
+#   2. "soft" : All the pods are deployed in the same node
+antiAffinity: "hard"
+
+# Terracotta Nodes Host
+terracotta_host: "terracotta-node-1.terracotta-service:9510,terracotta-node-2.terracotta-service:9510"
+
+# Terracotta BigMemory license file to be injected into pods
+terracotta_licenseKey:
+  terracotta-license.key: |
+    # Copy and paste the license file here
+	
+# Ingress configuration for load balancing the requests
+# (Refer to Ingress Documentation: https://kubernetes.io/docs/concepts/services-networking/ingress/)
+ingress:
+  enabled: false
+  annotations: {}
+#    kubernetes.io/ingress.class: nginx
+#    nginx.ingress.kubernetes.io/affinity: cookie
+  hosts:
+    - host: example.local.com
+      paths: []
+#      - backend:
+#          serviceName: sag-apigateway-service
+#          servicePort: 5555
+#        path: /
+#      - backend:
+#          serviceName: sag-apigateway-service
+#          servicePort: 9072
+#        path: /apigatewayui
+  tls: []
+
+
+  

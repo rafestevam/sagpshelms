@@ -1,0 +1,59 @@
+# Cluster Name and Node Group definition
+clusterName: "<yourClusterName>"
+nodeGroup: "<yourNodeGroup>"
+
+# Number of desired replicas to run
+# It's necessary at least 2 to make an Array Server
+replicaCount: 2
+
+
+antiAffinity: "hard"
+
+# API Gateway docker image configurations
+image:
+  repository: "<your/terracotta/image/repository>"
+  tag: "<your/terracotta/image/tag>"
+
+# Annotation that allows container running without endpoint is set
+service:
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+
+# Proof of that the Terracotta cluster is accessible
+#readnessProbe:
+#  exec:
+#    command: ["sh", "-c", "status_code=$(curl -o /dev/null --silent --write-out '%{http_code}\n' http://localhost:9540/tc-management-api/agents); if [ $status_code -eq \"200\" ] || [ $status_code -eq \"400\" ]; then exit 0; fi; exit 1"]    
+#  initialDelaySeconds: 10
+#  periodSeconds: 5
+#  timeoutSeconds:
+#  failureThreshold: 10000
+
+# Set to true if you want to persist Terracotta server logs
+persistence:
+  logs: false
+
+# Set to true if you want to put in place Terracotta Management Console
+tmc:
+  enabled: true
+  image:
+    repository: "<your/tmc/image>"
+    tag: "<your/tmc/tag>"
+    pullPolicy: IfNotPresent
+
+# TC-Config file to be injected in Terracotta pods
+tcConfig:
+  tc-config.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <tc:tc-config xmlns:tc="http://www.terracotta.org/config">
+      <copy your TC Config Here>
+    </tc:tc-config>
+
+# Terracotta BigMemory license file to be injected into pods
+licenseKey:
+  terracotta-license.key: |
+    # Copy and paste the license file here
+
+# Define the memory to be used by the pods
+resources:
+  requests:
+    memory: 4Gi
