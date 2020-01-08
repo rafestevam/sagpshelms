@@ -1,0 +1,28 @@
+{{- if .Values.licenseKey }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apigateway-licensekey
+  labels:
+{{ include "apigateway.labels" . | indent 4 }}
+data:
+{{- range $path, $config := .Values.licenseKey }}
+  {{ $path }}: |
+{{ $config | indent 4 -}}
+{{- end -}}
+{{- end }}
+
+{{- if .Values.terracotta_licenseKey }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: terracotta-licensekey
+  labels:
+{{ include "apigateway.labels" . | indent 4 }}
+data:
+{{- range $path, $config := .Values.terracotta_licenseKey }}
+  {{ $path }}: |
+{{ $config | indent 4 -}}
+{{- end -}}
+{{- end }}

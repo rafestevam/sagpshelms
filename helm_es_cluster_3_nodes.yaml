@@ -1,0 +1,45 @@
+clusterName: "sag-eds"
+nodeGroup: "master"
+image: "docker.elastic.co/elasticsearch/elasticsearch-oss"
+imageTag: "7.2.0"
+masterService: "sag-eds-master"
+antiAffinity: "soft"
+service:
+  type: NodePort
+  nodePort: 30900
+backup:
+  enabled: true
+  annotations: {}
+  type: nfs
+  server: "daeigcs40716.eur.ad.sag"
+  path: "/var/apiportal"
+  storage: 20Gi
+extraVolumeMounts: |
+  - name: backup
+    mountPath: /usr/shared/elasticsearch/backup
+extraVolumeTemplates: |
+  - metadata:
+      name: backup
+      labels:
+        app: elastic
+    spec:
+      accessModes: ["ReadWriteMany"]
+      storageClassName: es-apigw-class
+      resources:
+        requests:
+          storage: 20Gi
+extraInitContainers: |
+  - name: set-backup-config
+    image: "{{ .Values.image }}:{{ .Values.imageTag }}"
+    imagePullPolicy: "{{ .Values.imagePullPolicy }}"
+    command:
+    - sh
+    - -c
+    - |
+      #!/bin/bash
+      mkdir -p /usr/shared/elasticsearch/backup
+      echo 'path.repo: ["/usr/shared/elasticsearch/backup"]' >> /usr/share/elasticsearch/config/elasticsearch.yml
+      chown -R 1000:1000 /usr/shared/elasticsearch/backup
+    securityContext:
+      runAsUser: 0
+      privileged: true

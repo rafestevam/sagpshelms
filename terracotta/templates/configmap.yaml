@@ -1,0 +1,29 @@
+{{- if .Values.tcConfig }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "terracotta.uname" . }}-config
+  labels:
+    app: {{ template "terracotta.uname" . }}
+data:
+{{- range $path, $config := .Values.tcConfig }}
+  {{ $path }}: |
+{{ $config | indent 4 -}}
+{{- end -}}
+{{- end }}
+
+---
+
+{{- if .Values.licenseKey }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "terracotta.uname" . }}-licensekey
+  labels:
+    app: {{template "terracotta.uname" . }}
+data:
+{{- range $path, $config := .Values.licenseKey }}
+  {{ $path }}: |
+{{ $config | indent 4 -}}
+{{- end -}}
+{{- end }}

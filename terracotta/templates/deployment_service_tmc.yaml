@@ -1,0 +1,48 @@
+{{- if .Values.tmc.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tmc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tmc
+  template:
+    metadata:
+      labels:
+        app: tmc
+    spec:
+      containers:
+      - name: tmc
+        image: "{{ .Values.tmc.image.repository }}:{{ .Values.tmc.image.tag }}"
+        imagePullPolicy: "{{ .Values.tmc.image.pullPolicy }}"
+        ports:
+        - containerPort: 9889
+        volumeMounts:
+        {{- range $path, $licenseKey:= .Values.licenseKey }}
+        - name: license-volume
+          mountPath: /license/{{ $path }}
+          subPath: {{ $path }}
+        {{- end }}
+      volumes:
+        {{- if .Values.licenseKey }}
+        - name: license-volume
+          configMap:
+            name: {{ template "terracotta.uname" . }}-licensekey
+        {{- end }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: tmc
+spec:
+  ports:
+  - name: http
+    port: 9889
+  type: LoadBalancer
+  selector:
+    app: tmc
+{{- end }}

@@ -1,0 +1,86 @@
+clusterName: "tsa-cluster"
+nodeGroup: "apigw"
+
+replicaCount: 2
+
+antiAffinity: "hard"
+
+image:
+  repository: "homg3registry.azurecr.io/apigw/sag-terracotta"
+  tag: "4.3.8"
+  
+service:
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+
+#readnessProbe:
+#  exec:
+#    command: ["sh", "-c", "status_code=$(curl -o /dev/null --silent --write-out '%{http_code}\n' http://localhost:9540/tc-management-api/agents); if [ $status_code -eq \"200\" ] || [ $status_code -eq \"400\" ]; then exit 0; fi; exit 1"]    
+#  initialDelaySeconds: 10
+#  periodSeconds: 5
+#  timeoutSeconds:
+#  failureThreshold: 10000
+
+persistence:
+  logs: false
+  
+tmc:
+  enabled: true
+  image:
+    repository: "homg3registry.azurecr.io/apigw/sag-tmc"
+    tag: "4.3.8"
+    pullPolicy: IfNotPresent
+  
+tcConfig:
+  tc-config.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <tc:tc-config xmlns:tc="http://www.terracotta.org/config">
+      <servers>
+      <mirror-group>
+        <server host="tsa-cluster-apigw-0.tsa-cluster-apigw-headless" name="tsa-cluster-apigw-0" >
+          <data>/data/diskstore</data>
+          <data-backup>/data/backup</data-backup>
+          <logs>/data/logs</logs>
+          <dataStorage size="8g">
+            <offheap size="4g"/>
+          </dataStorage>
+        </server>
+        <server host="tsa-cluster-apigw-1.tsa-cluster-apigw-headless" name="tsa-cluster-apigw-1" >
+          <data>/data/diskstore</data>
+          <data-backup>/data/backup</data-backup>
+          <logs>/data/logs</logs>
+          <dataStorage size="8g">
+            <offheap size="4g"/>
+          </dataStorage>
+        </server>
+      </mirror-group>
+      <restartable enabled="true"/>
+      </servers>
+      <clients>
+        <logs>stdout:</logs>
+      </clients>
+    </tc:tc-config>
+
+licenseKey:
+  terracotta-license.key: |
+    # This software license, granted by Terracotta Inc. - a Software AG company, is valid for and may only be used
+    # by the licensee of this product ("Licensee").
+    # Descriptor version: 4
+    # ------------------------------------------------------------------------------------
+    Date of Issue: 2019-09-23
+    Expiration Date: 2020-11-30
+    License Type: Commercial
+    License Number: For Internal Use Only
+    Licensee: Software AG
+    Product: BigMemory Max
+    Edition: FX
+    Capabilities: TMC, WAN, authentication, ehcache, ehcache offheap, failover tuning, search, security, server array offheap, server striping
+    Max Client Count: 50
+    webMethods OEM: false
+    ehcache.maxOffHeap: 500G
+    terracotta.serverArray.maxDataStorage: 500G
+    Signature: MCwCFGnUXnlyASMia6QA96SU73aUVGE6AhQisFrxzxTxtj5JA9qgaO0L32K1+Q==  
+
+resources:
+  requests:
+    memory: 4Gi

@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sag-apigateway-service
+  labels:
+{{ include "apigateway.labels" . | indent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: http1
+      port: {{ .Values.is.port }}
+      targetPort: {{ .Values.is.port }}
+      protocol: TCP 
+    - name: http2
+      port: {{ .Values.apigateway.port }}
+      targetPort: {{ .Values.apigateway.port }}
+      protocol: TCP 
+    {{- if .Values.elasticsearch_sidecar }}
+    - name: http3
+      port: 9200
+      targetPort: 9200
+      protocol: TCP
+    {{- end }}
+    {{- if .Values.elasticsearch_embedded }}
+    - name: http3  
+      port: {{ .Values.elasticsearch_embedded.port }}
+      targetPort: {{ .Values.elasticsearch_embedded.port }}
+      protocol: TCP
+    {{- end }}
+  selector:
+    app.kubernetes.io/name: {{ include "apigateway.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

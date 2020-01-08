@@ -1,0 +1,147 @@
+---
+apiVersion: {{ template "terracotta.statefulset.apiVersion" . }}
+kind: StatefulSet
+metadata:
+  name: "{{ include "terracotta.uname" . }}"
+  labels:
+    app: "{{ include "terracotta.uname" . }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: "{{ include "terracotta.uname" . }}"
+  serviceName: {{ include "terracotta.uname" . }}-headless
+  template:
+    metadata:
+      name: "{{ template "terracotta.uname" . }}"
+      labels:
+        app: "{{ include "terracotta.uname" . }}"
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 6 }}
+      {{- end }}
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ include "terracotta.serviceAccountName" . }}
+      {{- end }}
+      terminationGracePeriodSeconds: 10
+      {{- if .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- end }}
+      {{- if .Values.extraInitContainers }}
+      initContainers:
+{{ tpl .Values.extraInitContainers . | indent 6 }}
+      {{- end }}
+      containers:
+        - name: "{{ template "terracotta.name" . }}"
+          {{- if .Values.securityContext }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          ports:
+            - name: server
+              containerPort: {{ .Values.ports.serverPort }}
+              protocol: TCP
+            - name: replication
+              containerPort: {{ .Values.ports.replicationPort }}
+              protocol: TCP
+            - name: management
+              containerPort: {{ .Values.ports.managementPort }}
+              protocol: TCP
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readnessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            {{- if .Values.persistence.diskstore }}
+            - name: diskstore
+              mountPath: /data/diskstore/
+            {{- end }}
+            {{- if .Values.persistence.backup }}
+            - name: backup
+              mountPath: /data/backup/
+            {{- end }}
+            {{- if .Values.persistence.logs }}
+            - name: logs
+              mountPath: /data/logs/
+            {{- end }}            
+            {{- range $path, $config := .Values.tcConfig }}
+            - name: tc-config
+              mountPath: /config/{{ $path }}
+              subPath: {{ $path }}
+            {{- end -}}
+            {{- range $path, $licenseKey:= .Values.licenseKey }}
+            - name: licensekey
+              mountPath: /license/{{ $path }}
+              subPath: {{ $path }}
+            {{- end }}
+      volumes:
+        {{- if .Values.persistence.diskstore }}
+        - name: diskstore
+          hostPath:
+            path: /data/diskstore/
+            type: DirectoryOrCreate
+        {{- end }}
+        {{- if .Values.persistence.backup }}
+        - name: backup
+          hostPath:
+            path: /data/backup/
+            type: DirectoryOrCreate
+        {{- end }}
+        {{- if .Values.persistence.logs }}
+        - name: backup
+          hostPath:
+            path: /data/logs/
+            type: DirectoryOrCreate
+        {{- end }}        
+        {{- if .Values.tcConfig }}
+        - name: tc-config
+          configMap:
+            name: {{ template "terracotta.uname" . }}-config
+        {{- end }}
+        {{- if .Values.licenseKey }}
+        - name: licensekey
+          configMap:
+            name: {{ template "terracotta.uname" . }}-licensekey
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      affinity:
+        {{- if eq .Values.antiAffinity "hard" }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - "{{ template "terracotta.uname" . }}"
+            topologyKey: {{ .Values.antiAffinityTopologyKey }}
+        {{- else if eq .Values.antiAffinity "soft" }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              topologyKey: {{ .Values.antiAffinityTopologyKey }}
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - "{{ template "terracotta.uname" . }}"
+        {{- end }}
+      {{- with .Values.tolerations }}        
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

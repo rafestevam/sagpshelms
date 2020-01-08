@@ -1,0 +1,54 @@
+replicaCount: 3
+
+image:
+  repository: "rafestevam/apigateway"
+  tag: "10.5"
+  
+elasticsearch_external:
+  host: sag-eds-master:9200
+  https: "false"
+  
+antiAffinity: "hard"
+  
+terracotta_host: "tsa-cluster-apigw-0.tsa-cluster-apigw-headless:9510,tsa-cluster-apigw-1.tsa-cluster-apigw-headless:9510"
+
+terracotta_licenseKey:
+  terracotta-license.key: |
+    # This software license, granted by Terracotta Inc. - a Software AG company, is valid for and may only be used
+    # by the licensee of this product ("Licensee").
+    # Descriptor version: 4
+    # ------------------------------------------------------------------------------------
+    Date of Issue: 2019-09-23
+    Expiration Date: 2020-11-30
+    License Type: Commercial
+    License Number: For Internal Use Only
+    Licensee: Software AG
+    Product: BigMemory Max
+    Edition: FX
+    Capabilities: TMC, WAN, authentication, ehcache, ehcache offheap, failover tuning, search, security, server array offheap, server striping
+    Max Client Count: 50
+    webMethods OEM: false
+    ehcache.maxOffHeap: 500G
+    terracotta.serverArray.maxDataStorage: 500G
+    Signature: MCwCFGnUXnlyASMia6QA96SU73aUVGE6AhQisFrxzxTxtj5JA9qgaO0L32K1+Q==
+    
+ingress:
+  enabled: false
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/affinity: cookie
+  hosts:
+    - host: vadigcs42955.eur.ad.sag
+      paths:
+      - backend:
+          serviceName: sag-apigateway-service
+          servicePort: 5555
+        path: /
+      - backend:
+          serviceName: sag-apigateway-service
+          servicePort: 9072
+        path: /apigatewayui
+  tls: []
+
+
+  
